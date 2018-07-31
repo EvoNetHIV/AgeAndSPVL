@@ -8,7 +8,7 @@ mean_sqrt_age_diff = 0.3
 meandeg = 0.7
 
 param_list=list(
-  model_name = "age_mixing03",
+  model_name = "age_mixing05",
   nw_form_terms = "~edges+absdiff('sqrt_age') + offset(nodematch('role',diff=TRUE, keep=1:2))",
   target_stats = c(initial_pop*meandeg/2, mean_sqrt_age_diff*initial_pop*meandeg/2),
   #mean_sex_acts_day = 0.2,
@@ -19,8 +19,8 @@ param_list=list(
   initial_agedata_male = "linear_decrease",
   nw_coef_form = c(-Inf, -Inf),
   prob_sex_by_age	= TRUE,
-  prob_sex_age_19	= 0.3,
-  max_age_sex	= 55,
+  prob_sex_age_19	= 0.4,
+  max_age_sex	= 35,
   
   nsims = 1,
   initial_pop = initial_pop,
@@ -46,30 +46,30 @@ modules <- c(
 )
 
 evomodel <- evorun(modules,evoparams,nw)
-ageSPVL_m03 <- evomodel
-save(ageSPVL_m03, file="ageSPVL_m03.rda")
+ageSPVL_m05 <- evomodel
+save(ageSPVL_m05, file="ageSPVL_m05.rda")
 
 #to specify name of output pdf and pathway, use arguments
 # name="xyz.pdf",outpath="/path to folder"
-evoplot(model=evomodel, name="ageSPVL_m03")
+evoplot(model=evomodel, name="ageSPVL_m05")
 
 popatts1 <- ageSPVL_m01$pop[[1]]
 plot(popatts1$age_infection[popatts1$Time_Inf>0],
      log(popatts1$SetPoint[popatts1$Time_Inf>0],10))
-popatts3 <- ageSPVL_m03$pop[[1]]
-plot(popatts3$age_infection[popatts3$Time_Inf>0],
-     log(popatts3$SetPoint[popatts3$Time_Inf>0],10))
+popatts5 <- ageSPVL_m05$pop[[1]]
+plot(popatts5$age_infection[popatts5$Time_Inf>0],
+     log(popatts5$SetPoint[popatts5$Time_Inf>0],10))
 
 summary(glm(log(popatts1$SetPoint[popatts1$Time_Inf>0],10)~
               popatts1$age_infection[popatts1$Time_Inf>0]+
               popatts1$Time_Inf[popatts1$Time_Inf>0]))
-summary(glm(log(popatts3$SetPoint[popatts3$Time_Inf>0],10)~
-              popatts3$age_infection[popatts3$Time_Inf>0]+
-              popatts3$Time_Inf[popatts3$Time_Inf>0]))
+summary(glm(log(popatts5$SetPoint[popatts5$Time_Inf>0],10)~
+              popatts5$age_infection[popatts5$Time_Inf>0]+
+              popatts5$Time_Inf[popatts5$Time_Inf>0]))
 summary(glm(log(popatts1$SetPoint[popatts1$Time_Inf>0],10)~
               popatts1$age_infection[popatts1$Time_Inf>0]))
-summary(glm(log(popatts3$SetPoint[popatts3$Time_Inf>0],10)~
-              popatts3$age_infection[popatts3$Time_Inf>0]))
+summary(glm(log(popatts5$SetPoint[popatts5$Time_Inf>0],10)~
+              popatts5$age_infection[popatts5$Time_Inf>0]))
 
 mean(popatts1$age_infection[popatts1$Time_Inf>0], na.rm=T)
-mean(popatts3$age_infection[popatts3$Time_Inf>0], na.rm=T)
+mean(popatts5$age_infection[popatts5$Time_Inf>0], na.rm=T)
