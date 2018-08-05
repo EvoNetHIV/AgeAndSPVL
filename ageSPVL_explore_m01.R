@@ -55,5 +55,6 @@ evoplot(model=evomodel, name="ageSPVL_m01")
 
 popatts <- ageSPVL_m01$pop[[1]]
 plot(popatts$age_infection[popatts$Time_Inf>0],log(popatts$SetPoint[popatts$Time_Inf>0],10))
-  
-     
+
+
+

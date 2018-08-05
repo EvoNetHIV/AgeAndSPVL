@@ -58,5 +58,3 @@ plot(popatts$age_infection[popatts$Time_Inf>0],log(popatts$SetPoint[popatts$Time
   
 aaa <- glm(log(popatts$SetPoint[popatts$Time_Inf>0],10)~popatts$age_infection[popatts$Time_Inf>0])
 summary(aaa)
-
-     
