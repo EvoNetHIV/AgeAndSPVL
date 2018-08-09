@@ -295,3 +295,63 @@ i <- 17
 summary(lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0 & popatts[[i]]$age_infection<30],10)~
                popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0 & popatts[[i]]$age_infection<30]))
 ```
+
+### Aug 9, 2018
+
+I have learned from John and James that they have code to model tx cessation and VL rebound. Hurray! Will try some runs right now.
+
+Run | 20 
+---- | ---- 
+min age	| 18 
+maxage | 55 
+mean_sqrtage_diff | 0.6 
+mean_sex_acts_per_day | --- 
+prob_sex_by_age | T 
+prob_sex_age_19 | 0.4 
+max_age_sex | 55 
+relation_dur | 200
+tx_type | "random"
+mean_trtmnt_delay | 1
+start_treatment_campaign | 1
+proportion_treated | 0.5
+testing_model | "interval"
+mean_test_interval_male | 365
+prob_tx_dropout | 0.1
+  
+
+```{R}
+setwd("../")
+for (i in 21) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+
+plot(numinc, prev)
+plot(prev, iSPVL, type='b')
+plot(agecoef); abline(h=0)
+plot(agematch)
+plot(meanageinf)
+plot(meanageinf, agecoef, type='b')
+plot(meanageinf, iSPVL)
+
+```
+
+Exploring whether the VL code works:
+
+```{R}
+plot(log10(ageSPVL_m21$vl_list[[1]][[7200]][,'vl']))
+#plot_vl_trajectories(ageSPVL_m21, outpath = ".", name="m21")
+
+```
+
