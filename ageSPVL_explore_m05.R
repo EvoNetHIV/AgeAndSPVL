@@ -49,27 +49,3 @@ evomodel <- evorun(modules,evoparams,nw)
 ageSPVL_m05 <- evomodel
 save(ageSPVL_m05, file="ageSPVL_m05.rda")
 
-#to specify name of output pdf and pathway, use arguments
-# name="xyz.pdf",outpath="/path to folder"
-evoplot(model=evomodel, name="ageSPVL_m05")
-
-popatts1 <- ageSPVL_m01$pop[[1]]
-plot(popatts1$age_infection[popatts1$Time_Inf>0],
-     log(popatts1$SetPoint[popatts1$Time_Inf>0],10))
-popatts5 <- ageSPVL_m05$pop[[1]]
-plot(popatts5$age_infection[popatts5$Time_Inf>0],
-     log(popatts5$SetPoint[popatts5$Time_Inf>0],10))
-
-summary(glm(log(popatts1$SetPoint[popatts1$Time_Inf>0],10)~
-              popatts1$age_infection[popatts1$Time_Inf>0]+
-              popatts1$Time_Inf[popatts1$Time_Inf>0]))
-summary(glm(log(popatts5$SetPoint[popatts5$Time_Inf>0],10)~
-              popatts5$age_infection[popatts5$Time_Inf>0]+
-              popatts5$Time_Inf[popatts5$Time_Inf>0]))
-summary(glm(log(popatts1$SetPoint[popatts1$Time_Inf>0],10)~
-              popatts1$age_infection[popatts1$Time_Inf>0]))
-summary(glm(log(popatts5$SetPoint[popatts5$Time_Inf>0],10)~
-              popatts5$age_infection[popatts5$Time_Inf>0]))
-
-mean(popatts1$age_infection[popatts1$Time_Inf>0], na.rm=T)
-mean(popatts5$age_infection[popatts5$Time_Inf>0], na.rm=T)

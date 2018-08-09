@@ -49,12 +49,3 @@ evomodel <- evorun(modules,evoparams,nw)
 ageSPVL_m01 <- evomodel
 save(ageSPVL_m01, file="ageSPVL_m01.rda")
 
-#to specify name of output pdf and pathway, use arguments
-# name="xyz.pdf",outpath="/path to folder"
-evoplot(model=evomodel, name="ageSPVL_m01")
-
-popatts <- ageSPVL_m01$pop[[1]]
-plot(popatts$age_infection[popatts$Time_Inf>0],log(popatts$SetPoint[popatts$Time_Inf>0],10))
-
-
-
