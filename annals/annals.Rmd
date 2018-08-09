@@ -321,7 +321,7 @@ prob_tx_dropout | 0.1
 
 ```{R}
 setwd("../")
-for (i in 21) {
+for (i in 20:21) {
   if(i<10) filler <- "0" else filler <- ""
   load(paste("ageSPVL_m",filler,i,".rda",sep=""))
   obj <- get(paste("ageSPVL_m",filler,i,sep=""))
