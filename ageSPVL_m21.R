@@ -27,6 +27,7 @@ param_list=list(
   mean_trtmnt_delay = 1,
   start_treatment_campaign = 1,
   proportion_treated = 0.5,
+  tx_schedule_props=c(F=0,V=1,N=0,P=0),
   
   #testing params
   testing_model            = "interval",
@@ -49,7 +50,7 @@ param_list=list(
 evoparams <- do.call(evonet_setup,param_list)
 nw <- nw_setup(evoparams)
 
-evoparams$prob_tx_dropout = 0.05
+evoparams$prob_tx_droput = 0.05    # Yes, the parameter name is missing an 'o'
   
 modules <- c(
   "aging",

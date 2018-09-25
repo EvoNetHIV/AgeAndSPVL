@@ -27,10 +27,16 @@ param_list=list(
   mean_trtmnt_delay = 1,
   start_treatment_campaign = 1,
   proportion_treated = 0.5,
+  tx_schedule_props  = c("F"=0,"V"=1.0,"N"=0,"P"=0), # Percentage of people who always (F), sometimes (V), or never (N) take therapy
   
   #testing params
   testing_model            = "interval",
   mean_test_interval_male  = 365,
+  
+  prob_care                = 1.0,  # Percent population that could get treated given "all out" campaign
+  prob_eligible_ART        = 1.0,
+  tx_limit = "absolute_num", # Choices: "absolute_num" or percentage"
+  vl_full_supp    = 1e-3, # Assume highly suppressiver therapy
   
 #  "diagnosis.FUN"      = social_testing_diagnosis_module, #change from PrEP sims
 #  "treatment.FUN"      = social_treatment_module_john_v3,
@@ -39,7 +45,7 @@ param_list=list(
   initial_pop = initial_pop,
   initial_infected = 100,
   n_steps = 365*20,
-  popsumm_frequency=30,
+  popsumm_frequency=10,
   fast_edgelist=T,
   plot_nw=F,
   save_vl_list=TRUE
@@ -49,12 +55,18 @@ param_list=list(
 evoparams <- do.call(evonet_setup,param_list)
 nw <- nw_setup(evoparams)
 
-evoparams$prob_tx_dropout = 0.1
-  
+evoparams$prob_tx_droput = 0.1    # Yes, the parameter name is missing an 'o'
+
+#evoparams$prob_care                = 1.0  # Percent population that could get treated given "all out" campaign
+#evoparams$prob_eligible_ART        = 1.0
+#evoparams$tx_limit = "absolute_num" # Choices: "absolute_num" or percentage"
+#evoparams$vl_full_supp    = 1e-3 # Assume highly suppressiver therapy
+
 modules <- c(
   "aging",
   "testing",
   "treatment_dropout",
+  "targeted_treatment2",
   "treatment",
   "viral_update_delayed_rebound",
   "cd4_update2",
