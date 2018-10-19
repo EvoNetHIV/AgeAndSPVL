@@ -323,29 +323,29 @@ I learned from John and James that they have code to model tx cessation and VL r
 
 Run 20 was my first attempt, which did not work - once people became suppressed, they stayed there; or, if they lost supression, they immediately regained it.
 
-From there, James and John and I shared a series of emails (subject: treatment dropout scripts/results, dates Aug 9-11). James revealed some arguemnts that needed to be set, and the fact that the "prob_tx_droput" argument is spelled wrong (missing an o). He also included a sample script that worked, whichI have included as ageSPVL_m21_jtm2.R. This had some duplicate arguments in it (ones set twice), and some that didn't have to be set (inclding different stages of a treatment campaign). I then spent time trying to streamline it while still getting the behavior to work as expected (i.e. people having both long periods of suppression and then subsequent periods of non-suppression.) One of these attempts is ageSPVL_m21.R. Then James realized he needed to commit the function targeted_treatment2 to the master branch, which has the needed code to assign treatment randomly.  Runs 22-25 use this, and explore different scenarios. Hoewver, I did not finishing ascertaining what every parameter does and which ones are truly needed, nor did  I determine what proportion of people are actually on treatment at any point in time, what proportion go onto treatment immediately, etc.  This is all crucial for being able to understand the scnearios being modeled and relate observed outcomes to their features.  Looking at it now I see: 
+From there, James and John and I shared a series of emails (subject: treatment dropout scripts/results, dates Aug 9-11). James revealed some arguments that needed to be set, and the fact that the "prob_tx_droput" argument is spelled wrong (missing an o). He also included a sample script that worked, which I have included as ageSPVL_m21_jtm2.R. This had some duplicate arguments in it (ones set twice), and some that didn't have to be set (including different stages of a treatment campaign). I then spent time trying to streamline it while still getting the behavior to work as expected (i.e. people having both long periods of suppression and then subsequent periods of non-suppression.) One of these attempts is ageSPVL_m21.R. Then James realized he needed to commit the function targeted_treatment2 to the master branch, which has the needed code to assign treatment randomly.  Runs 22-25 use this, and explore different scenarios, although they do not appear to be all that different from one another. However, I did not finish ascertaining what every parameter does and which ones are truly needed, nor did  I determine what proportion of people are actually on treatment at any point in time, what proportion go onto treatment immediately, etc.  This is all crucial for being able to understand the scenarios being modeled and relate observed outcomes to their features.  Looking at it now I see the following results, although I'm not ready to put much stock in their interpretation:
 
-Run | 21 | 22 | 23 | 24 | 25
----- | ---- | ---- | ---- | ---- | ---- 
-min age	| 18 | 18 | 18 | 18 | 18
-maxage | 55 | 55 | 55 | 55 | 55
-mean_sqrtage_diff | 0.6 | 0.6 | 0.6 | 0.3 | 0.3
-mean_sex_acts_per_day | --- | --- | --- | --- | ---
-prob_sex_by_age | T | T | T | T | T
-prob_sex_age_19 | 0.4 | 0.4 | 0.4 | 0.4 | 0.4 
-max_age_sex | 55 | 55 | 55 | 55 | 55
-relation_dur | 200 | 200 | 200 | 200 | 200 
-tx_type | "random" |  |  |  | 
-mean_trtmnt_delay | 1 |  |  |  | 
-start_treatment_campaign | 1 |  |  |  | 
-proportion_treated | 0.5 |  |  |  | 
-testing_model | "interval" |  |  |  | 
-mean_test_interval_male | 365 |  |  |  | 
-prob_tx_dropout | 0.1 |  |  |  | 
-  
+Run | 22 | 23 | 24 | 25
+---- | ---- | ---- | ---- | ----
+min age	| 18 | 18 | 18 | 18
+maxage | 55 | 55 | 55 | 55
+mean_sqrtage_diff | 0.6 | 0.6 | 0.3 | 0.3
+mean_sex_acts_per_day | --- | --- | --- | ---
+prob_sex_by_age | T | T | T | T
+prob_sex_age_19 | 0.4 | 0.4 | 0.4 | 0.4 
+max_age_sex | 55 | 55 | 55 | 55
+relation_dur | 200 | 200 | 200 | 200 
+tx_type | "random" | "random" | "random" | "random" 
+mean_trtmnt_delay | 0 | 0 | 0 | 0
+start_treatment_campaign | 1 |  1 | 1 | 1
+proportion_treated | 0.1 | 0.15 | 0.15 | 0.17
+testing_model | "interval" | "interval" | "interval" | "interval" 
+mean_test_interval_male | 365 | 365 | 365 | 365
+prob_tx_dropout | 0.1 | 0.1 | 0.1 | 0.1 
+
 
 ```{R}
-for (i in 20:25) {
+for (i in 21:25) {
   if(i<10) filler <- "0" else filler <- ""
   load(paste("ageSPVL_m",filler,i,".rda",sep=""))
   obj <- get(paste("ageSPVL_m",filler,i,sep=""))
@@ -360,28 +360,68 @@ for (i in 20:25) {
   agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
   meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
 }
+```
 
+```{R}
 plot(numinc, prev, type='b')
+```
+
+This demonstrates that treatment is certainly working in some form, given the strong distinction between the tx and no-tx runs in this relationship.
+
+```{R}
 plot(prev, iSPVL, type='b')
 plot(agecoef); abline(h=0)
 plot(agematch)
 plot(meanageinf)
 plot(meanageinf, agecoef, type='b')
 plot(meanageinf, iSPVL)
-
 ```
 
-Exploring whether the VL code works:
+In the next few plots I look into whether/how the VL code works:
 
 ```{R}
 plot(log10(ageSPVL_m22$vl_list[[1]][[7200]][,'vl']))
-#plot_vl_trajectories(ageSPVL_m21, outpath = ".", name="m21")
-
 ```
 
 ```{R}
 plot(popatts[[23]]$age_infection, popatts[[23]]$Donors_age)
 plot(popatts[[24]]$age_infection, popatts[[24]]$Donors_age)
+```
+
+```{R}
 table(popatts[[24]]$Status)
 ```
 
+Status | Meaning
+--- | ---
+1 | alive and HIV+
+ 2 | alive and HIV-
+-1 | died of background mortality
+-1.5 | aged out
+-2 | died of AIDS
+
+## October 1, 2018
+
+I am searching through the code to see what each relevant parameter actually does:
+
+Parameter | Use
+--- | ----
+tx_type | 
+mean_trtmnt_delay | Delay between diagnosis and start of treatment
+start_treatment_campaign | 
+proportion_treated | 
+start_treatment_campaign | 
+prob_eligible_ART | 
+tx_limit | 
+vl_full_supp | 
+tx_schedule_props | % of people who always (F), sometimes (V), or never (N) take therapy
+prob_tx_droput | NO "O"! Prob. of "V"-type agent discontinuing therapy over the course of a year
+proportion_treated_begin | Treated before gradual ramp-up 
+prop_tx_before | 
+yearly_incr_tx | annual inc. in # of people being treated after the TasP campaign
+start_treat_before_big_campaign | Start time of gradual ramp-up prior to the start of the big TasP campaign (this part random)
+start_treatment_campaign | Start time of big TasP campaign (this part depends on tx_type)
+prob_care | % that could get treated given "all out" campaign
+prob_eligible_ART | 
+tx_limit = "absolute_num" | Choices: "absolute_num" or percentage"
+vl_full_supp | 
