@@ -404,24 +404,191 @@ Status | Meaning
 
 I am searching through the code to see what each relevant parameter actually does:
 
-Parameter | Use
+Parameter | Use | Value w/ notes
 --- | ----
-tx_type | 
-mean_trtmnt_delay | Delay between diagnosis and start of treatment
-start_treatment_campaign | 
-proportion_treated | 
-start_treatment_campaign | 
+start_treat_before_big_campaign | Start time of gradual ramp-up prior to the start of the big TasP campaign (this part random) | 
+start_treatment_campaign | start time of tx campaign (this part depends on tx_type)
+tx_type | how treatment is allocated during the tx campaig. random = anyone not_curr_tx, which means not on tx, diagnosed, and beyond mean_trtmnt_delay since diagnosis
+tx_limit | flag with values "absolute_num" or "percentage"
+mean_trtmnt_delay | Delay between diagnosis and availability for tx 
+proportion_treated | See notes below
 prob_eligible_ART | 
-tx_limit | 
-vl_full_supp | 
 tx_schedule_props | % of people who always (F), sometimes (V), or never (N) take therapy
 prob_tx_droput | NO "O"! Prob. of "V"-type agent discontinuing therapy over the course of a year
-proportion_treated_begin | Treated before gradual ramp-up 
 prop_tx_before | 
 yearly_incr_tx | annual inc. in # of people being treated after the TasP campaign
-start_treat_before_big_campaign | Start time of gradual ramp-up prior to the start of the big TasP campaign (this part random)
-start_treatment_campaign | Start time of big TasP campaign (this part depends on tx_type)
 prob_care | % that could get treated given "all out" campaign
 prob_eligible_ART | 
-tx_limit = "absolute_num" | Choices: "absolute_num" or percentage"
 vl_full_supp | 
+proportion_treated_begin | Treated before ramp-up 
+
+
+## October 19
+
+Work on the above table made me realize that the code is written in a funny way, such that:
+
+If tx_limit == "absolute_num" then on the time steps prior to the start of the tx campaign, max_num_treated is set as proportion_treated*number_infected.  Then starting with the first day of the campaign, that number becomes frozen.  Future increases in the number who can be treated is determined by yearly_incr_tx.
+
+If tx_limit == "percentage", then the tx limit is proportion_treated*total_alive (not total_infected).
+
+Because I had had start_treatment_campaign == 1, there was never a chance for the code to set the maximum number for treatment.  So for run 26 I changed start_treatment_campaign to 2, and proportion_treated to 0.5.  Initial run looked very promising:
+
+```{R}
+for (i in 21:26) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+```
+
+```{r}
+plot(agecoef); abline(h=0)
+```
+
+However, a review of the vl_traj pdf revelaed very odd things.  Done for the day.
+
+## Oct 23, 2018
+
+I discovered that I had tx_type set to "percentage" instead instead of "absolute_num". Changing that and upping the percentage treated to 0.5 led to behavior in the vl_traj that I would expect.  In doing this I edited run 26 instead of creating a new run, so the run 26 shown up above no longer matches what it used to be up there.
+
+```{R}
+for (i in 21:26) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+```
+
+```{r}
+plot(agecoef); abline(h=0)
+plot(popatts[[26]]$age_infection, popatts[[26]]$Donors_age)
+```
+
+OK it's late at night and instead of finish documenting I decided to do a run 27 where I made the relationships longer, the age mixing tighter, and the probability of tx dropout lower.  Bad scientist :-)
+
+```{r}
+for (i in 27:27) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+```
+
+```{r}
+plot(agecoef); abline(h=0)
+plot(popatts[[27]]$age_infection, popatts[[27]]$Donors_age)
+i <- 27; summary(lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0]))
+```
+```{r}
+plot(agecoef); abline(h=0)
+plot(popatts[[27]]$age_infection, popatts[[27]]$Donors_age)
+```
+
+## Oct 26
+
+Run 27 is a dud. Of course I changed three things in doing it, so it's hard to know what any of the effects are.  So I just created the runs 28-30 which change each of one of those three things back, to see if there is any clear signal across any of them. Set them running and then heading out.
+
+
+```{r}
+for (i in 28:30) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+```
+
+```{r}
+plot(agecoef); abline(h=0)
+plot(popatts[[28]]$age_infection, popatts[[28]]$Donors_age)
+plot(popatts[[29]]$age_infection, popatts[[29]]$Donors_age)
+plot(popatts[[30]]$age_infection, popatts[[30]]$Donors_age)
+
+```
+
+```{r}
+for(i in 28:30) print(summary(lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])))
+```
+
+### Oct 30, 2018
+
+What isn't obvious from the above results is that I ran the run 29 a few times, because its first iteration showed a high positive correlation between age and SPVL, and I wanted to see if this was robust.  My later runs reversed that.  So it seems as if the time may have come to amplify the population sizes and/or run times and/or number of runs on these to really clarify the magnitude of the effects.  Until now we wanted a "quick look" but it's now clear that, with things working we need more to know things for sure.
+
+Note to self: still want to go and do final confirmation on how the treatment is working, and whether the expected number of people really are on treatment at any point in time.  We may also wish to do a check of how at any point in time what the viral load of those alive is by their current age (rather than their age at acquisition) because this will help to determine the magnitude of the different effects.
+
+Note to self: Sarah wrote with a clever idea - that underlying heterogeneity in risk acquisition (whether biological or something else) which varies across person but not necessarily over time within person might also creat ethis kind of effect. Because those who are infected later would disproportinately be those with lower per-act acquisition risk.  Should explore this too.
+
+So, beginning now to set running three more robust runs. Starting with 28->31.  Time goes 20->50 years, nsims 1->5. (Increasing pop size leads to an error that seems to have something to do with MaxDyadTypes)
+
+```{r}
+for (i in 31:31) {
+  if(i<10) filler <- "0" else filler <- ""
+  load(paste("ageSPVL_m",filler,i,".rda",sep=""))
+  obj <- get(paste("ageSPVL_m",filler,i,sep=""))
+  popatts[[i]] <- obj$pop[[1]]
+  popsumm[[i]] <- get(paste("ageSPVL_m",filler,i,sep=""))$popsumm[[1]]
+  agecoef[i] <- lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])$coef[[2]]
+  iSPVL[i] <- mean(log10(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0]),na.rm=TRUE)
+  ageinf[i] <- mean(popatts[[i]]$age_infection,na.rm=TRUE)
+  prev[i] <- tail(popsumm[[i]]$prevalence,1)
+  numinc[i] <- sum(popatts[[i]]$Time_Inf>0, na.rm=TRUE)
+  agematch[i] <- obj$nwparam[[1]]$coef.form['absdiff.sqrt_age']
+  meanageinf[i] <- mean(popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0], na.rm=TRUE)
+}
+```
+
+```{r}
+plot(agecoef); abline(h=0)
+plot(popatts[[31]]$age_infection, popatts[[31]]$Donors_age)
+
+```
+
+```{r}
+for(i in 28:31) print(summary(lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf>0],10)~
+               popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])))
+```
+
+Standard error did go down by about half.  But it appears only one sim wsa done.  Perhaps this is because I didn't set ncores? Will try that now, as run 32.
+
