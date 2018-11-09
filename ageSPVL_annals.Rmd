@@ -590,5 +590,5 @@ for(i in 28:31) print(summary(lm(log(popatts[[i]]$SetPoint[popatts[[i]]$Time_Inf
                popatts[[i]]$age_infection[popatts[[i]]$Time_Inf>0])))
 ```
 
-Standard error did go down by about half.  But it appears only one sim wsa done.  Perhaps this is because I didn't set ncores? Will try that now, as run 32.
+Standard error did go down by about half.  But it appears only one sim was done.  Perhaps this is because I didn't set ncores? Will try that now, as run 32.
 
