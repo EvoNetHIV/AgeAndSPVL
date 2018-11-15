@@ -35,8 +35,7 @@ param_list=list(
 #  "diagnosis.FUN"      = social_testing_diagnosis_module, #change from PrEP sims
 #  "treatment.FUN"      = social_treatment_module_john_v3,
 
-  nsims = 5,
-  ncores = 5,
+  nsims = 10, ncores = 10,
   initial_pop = initial_pop,
   initial_infected = 200,
   n_steps = 365*50,
